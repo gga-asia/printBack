@@ -2529,6 +2529,7 @@ namespace WindowsFormsApp1
         private void Form1_Load(object sender, EventArgs e)
         {
             backgroundWorker1.RunWorkerAsync();
+            controlButton.PerformClick();//開啟程式時自動按按鈕
         }
 
         private void button1_Click(object sender, EventArgs e)
