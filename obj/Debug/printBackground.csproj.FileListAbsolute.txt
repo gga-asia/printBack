@@ -1,0 +1,60 @@
+C:\Project\PrintKernel\printBack\bin\Debug\WindowsFormsApp1.exe.config
+C:\Project\PrintKernel\printBack\bin\Debug\WindowsFormsApp1.exe
+C:\Project\PrintKernel\printBack\bin\Debug\WindowsFormsApp1.pdb
+C:\Project\PrintKernel\printBack\bin\Debug\Newtonsoft.Json.dll
+C:\Project\PrintKernel\printBack\obj\Debug\printBackground.csproj.AssemblyReference.cache
+C:\Project\PrintKernel\printBack\obj\Debug\WindowsFormsApp1.Form1.resources
+C:\Project\PrintKernel\printBack\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\Project\PrintKernel\printBack\obj\Debug\printBackground.csproj.GenerateResource.cache
+C:\Project\PrintKernel\printBack\obj\Debug\printBackground.csproj.CoreCompileInputs.cache
+C:\Project\PrintKernel\printBack\obj\Debug\printBac.7FD806C1.Up2Date
+C:\Project\PrintKernel\printBack\obj\Debug\WindowsFormsApp1.exe
+C:\Project\PrintKernel\printBack\obj\Debug\WindowsFormsApp1.pdb
+C:\Project\PrintKernel\printBack(正式)\bin\Debug\WindowsFormsApp1.exe.config
+C:\Project\PrintKernel\printBack(正式)\bin\Debug\WindowsFormsApp1.exe
+C:\Project\PrintKernel\printBack(正式)\bin\Debug\WindowsFormsApp1.pdb
+C:\Project\PrintKernel\printBack(正式)\bin\Debug\Newtonsoft.Json.dll
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\printBackground.csproj.AssemblyReference.cache
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\WindowsFormsApp1.Form1.resources
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\printBackground.csproj.GenerateResource.cache
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\printBackground.csproj.CoreCompileInputs.cache
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\printBac.7FD806C1.Up2Date
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\WindowsFormsApp1.exe
+C:\Project\PrintKernel\printBack(正式)\obj\Debug\WindowsFormsApp1.pdb
+C:\En\列印核心程式\printBack(正式)\bin\Debug\WindowsFormsApp1.exe.config
+C:\En\列印核心程式\printBack(正式)\bin\Debug\WindowsFormsApp1.exe
+C:\En\列印核心程式\printBack(正式)\bin\Debug\WindowsFormsApp1.pdb
+C:\En\列印核心程式\printBack(正式)\bin\Debug\Newtonsoft.Json.dll
+C:\En\列印核心程式\printBack(正式)\obj\Debug\printBackground.csproj.AssemblyReference.cache
+C:\En\列印核心程式\printBack(正式)\obj\Debug\WindowsFormsApp1.Form1.resources
+C:\En\列印核心程式\printBack(正式)\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\En\列印核心程式\printBack(正式)\obj\Debug\printBackground.csproj.GenerateResource.cache
+C:\En\列印核心程式\printBack(正式)\obj\Debug\printBackground.csproj.CoreCompileInputs.cache
+C:\En\列印核心程式\printBack(正式)\obj\Debug\printBackground.csproj.CopyComplete
+C:\En\列印核心程式\printBack(正式)\obj\Debug\WindowsFormsApp1.exe
+C:\En\列印核心程式\printBack(正式)\obj\Debug\WindowsFormsApp1.pdb
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\bin\Debug\WindowsFormsApp1.exe.config
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\bin\Debug\WindowsFormsApp1.exe
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\bin\Debug\WindowsFormsApp1.pdb
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\bin\Debug\Newtonsoft.Json.dll
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\printBackground.csproj.AssemblyReference.cache
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\WindowsFormsApp1.Form1.resources
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\printBackground.csproj.GenerateResource.cache
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\printBackground.csproj.CoreCompileInputs.cache
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\printBackground.csproj.CopyComplete
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\WindowsFormsApp1.exe
+C:\En\列印核心程式\20241223 加入替換頁首中文至方塊內容為圖片功能\printBack(正式)\obj\Debug\WindowsFormsApp1.pdb
+C:\GitHub\printBack(正式)\bin\Debug\WindowsFormsApp1.exe.config
+C:\GitHub\printBack(正式)\bin\Debug\WindowsFormsApp1.exe
+C:\GitHub\printBack(正式)\bin\Debug\WindowsFormsApp1.pdb
+C:\GitHub\printBack(正式)\bin\Debug\Newtonsoft.Json.dll
+C:\GitHub\printBack(正式)\obj\Debug\printBackground.csproj.AssemblyReference.cache
+C:\GitHub\printBack(正式)\obj\Debug\WindowsFormsApp1.Form1.resources
+C:\GitHub\printBack(正式)\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\GitHub\printBack(正式)\obj\Debug\printBackground.csproj.GenerateResource.cache
+C:\GitHub\printBack(正式)\obj\Debug\printBackground.csproj.CoreCompileInputs.cache
+C:\GitHub\printBack(正式)\obj\Debug\printBac.7FD806C1.Up2Date
+C:\GitHub\printBack(正式)\obj\Debug\WindowsFormsApp1.exe
+C:\GitHub\printBack(正式)\obj\Debug\WindowsFormsApp1.pdb

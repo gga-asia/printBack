@@ -1,0 +1,12 @@
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.AssemblyReference.cache
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.GenerateResource.cache
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.CoreCompileInputs.cache
+C:\Project\PrintKernel\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe.config
+C:\Project\PrintKernel\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe
+C:\Project\PrintKernel\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.pdb
+C:\Project\PrintKernel\WindowsFormsApp1\bin\Debug\Newtonsoft.Json.dll
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsF.A1EEDF9B.Up2Date
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.exe
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.pdb
+C:\Project\PrintKernel\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.Form1.resources
