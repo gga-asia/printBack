@@ -652,6 +652,38 @@ namespace PrintKernel
                         FindReplaceTextFrame("@" + findText + "@", "");
                     }
                 }
+                else if (replacetxt_ary.Length == 2 && replacetxt_ary[1] == "H_IMG")
+                {
+                    string url = ConfigurationManager.AppSettings["LISImageUrl"];
+                    string Path = ConfigurationManager.AppSettings["GGALISImageFilePath"];
+                    Path = string.Format("{0}{1}", Path, replacetxt_ary[0]);
+                    string image_path = string.Format("{0}/{1}", url, replacetxt_ary[0]);
+                    image_path = image_path.Replace(@"\", "/");
+                    image_path = image_path.Replace(@"//", "/");
+
+                    if (File.Exists(Path))
+                    {
+                        using (var img = System.Drawing.Image.FromFile(Path))
+                        {
+                            // 獲取圖片的寬度和高度
+                            float width = img.Width;
+                            float height = img.Height;
+                            var sel = wordApp8.Selection;
+
+                            SearchReplacePicInHeader("@" + findText + "@", Path, width, height);
+                            //SearchReplaceTextFramePic("@" + findText + "@", Path);
+                        }
+                    }
+                    else //沒找到圖就直接替換為""
+                    {
+                        //文字替換(內文文字)
+                        Replace("@" + findText + "@", "");
+                        //文字替換(頁首文字)
+                        FindReplaceHeaderTxt("@" + findText + "@", "");
+                        //文字替換(文字方塊)
+                        FindReplaceTextFrame("@" + findText + "@", "");
+                    }
+                }
                 else if (replacetxt_ary.Length == 2 && replacetxt_ary[1] == "H_IMG_TF")//替換Header中文字方塊內文字為圖片
                 {
                     string Path = ConfigurationManager.AppSettings["GGALISImageFilePath"];
@@ -721,6 +753,48 @@ namespace PrintKernel
             //{
             //    InsertLog("", ex.Message);
             //}
+        }
+
+        //替換頁首文字為圖片
+        /// <param name="FindStr"></param>
+        /// <param name="replacePic"></param>
+        /// <param name="W"></param>
+        /// <param name="H"></param>
+        public void SearchReplacePicInHeader(string FindStr, object replacePic, object W, object H)
+        {
+            try
+            {
+                // 取得當前文檔的所有節
+                foreach (Section section in this.wordApp8.ActiveDocument.Sections)
+                {
+                    // 取得節的主要頁首範圍
+                    Range headerRange = section.Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range;
+
+                    // 清除查找格式化
+                    headerRange.Find.ClearFormatting();
+
+                    // 設置查找條件並執行查找
+                    bool found = headerRange.Find.Execute(FindStr);
+
+                    if (found)
+                    {
+                        headerRange.Select();
+
+                        InlineShape inlineShape = this.wordApp8.Selection.InlineShapes.AddPicture(
+                            FileName: replacePic.ToString(),
+                            LinkToFile: false,
+                            SaveWithDocument: true
+                        );
+
+                        inlineShape.Width = Convert.ToInt16(W);
+                        inlineShape.Height = Convert.ToInt16(H);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("發生錯誤: " + ex.Message);
+            }
         }
 
         /// <summary>

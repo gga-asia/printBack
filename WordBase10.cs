@@ -12,14 +12,15 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using WindowsFormsApp1.Class;
 
 
 namespace PrintKernel
 {
-    class WordBase4 : IDisposable
+    class WordBase10 : IDisposable
     {
         public string LastError { get; set; }
-        private Application wordApp4 { get; set; }
+        public Application wordApp10 { get; set; }
         public Document aDoc { get; set; }
         object _nullobj = System.Reflection.Missing.Value;
         object missing = System.Reflection.Missing.Value;
@@ -36,17 +37,17 @@ namespace PrintKernel
         /// <param name="pSourceFileName">WORD範本路徑</param>
         /// <param name="pTargetFilePath">暫存路徑</param>
         /// <param name="pDt">報表繫節資料(DataTable)</param>
-        public void Export(string pTemplateFileName, string pTargetFileName, System.Data.DataTable pDt, string pFileType, string pIsTempFile)
+        public void Export(String pTemplateFileName, String pTargetFileName, System.Data.DataTable pDt, List<TableFormat> formatDt, System.Data.DataTable dataDt, String pFileType, String pIsTempFile)
         {
             //try
             //{
-
             if (pDt != null && pDt.Rows.Count > 0)
             {
                 foreach (DataRow dr in pDt.Rows)
                 {
-                    string folderPath = System.Windows.Forms.Application.StartupPath + @"\" + "FFD0-4";
-                    Console.WriteLine(string.Format("{0} 從範本複製一份到新檔案(FFD 0-4)", DateTime.Now));
+                    string folderPath = System.Windows.Forms.Application.StartupPath + @"\" + "ECS";
+                    Console.WriteLine(string.Format("{0} 從範本複製一份到新檔案(ECS)", DateTime.Now));
+                    Random rand = new Random();
                     //從範本複製一份到暫存檔案
                     string TempFileName = Guid.NewGuid().ToString() + ".doc";
                     CreateFile(pTemplateFileName, TempFileName, folderPath);
@@ -55,10 +56,35 @@ namespace PrintKernel
                     Console.WriteLine(string.Format("{0} 替換圖檔", DateTime.Now));
                     AddImage(dr);
 
+                    #region"20240919表格修改"
+                    // 這裡處理表格格式 
+                    if (formatDt != null)
+                    {
+                        Console.WriteLine(string.Format("{0} 處理表格格式", DateTime.Now));
+                        HandleTableFormatting(formatDt);
+                    }
+
+
+                    //處理完格式再往表格裡面到資料
+                    if (dataDt != null)
+                    {
+                        Console.WriteLine(string.Format("{0} 填入表格資料", DateTime.Now));
+                        FillTableData(dataDt);
+                    }
+
+
+                    // 處理合併欄位
+                    if (formatDt != null)
+                    {
+                        Console.WriteLine(string.Format("{0} 合併欄位", DateTime.Now));
+                        MergeTableCells(formatDt);
+                    }
+                    #endregion
+
                     //替換文字
                     Console.WriteLine(string.Format("{0} 替換文字", DateTime.Now));
                     ReplaceWordTxtFromDatatable(dr);
-                    ;
+
                     string OutputPath = ConfigurationManager.AppSettings["LISFilePath"];
 
                     if (pIsTempFile.ToUpper() == "Y")
@@ -101,6 +127,181 @@ namespace PrintKernel
             //    Console.WriteLine(ex.Message);
             //}
         }
+
+
+        #region"20240919表格修改"
+        public void HandleTableFormatting(List<TableFormat> formatDt)
+        {
+            if (formatDt == null || formatDt.Count == 0)
+                return;
+
+            foreach (var tableFormat in formatDt)
+            {
+                if (tableFormat.IsInsert == 1)
+                {
+                    Table table = aDoc.Tables[tableFormat.TableNum];
+                    //Row row = table.Rows[tableFormat.RowNum];
+                    Row row = table.Rows.Add(table.Rows[tableFormat.RowNum]);
+
+                    // 設定行高
+                    row.Height = Convert.ToSingle(tableFormat.RowHeight * 28.35); // 高度以毫米為單位, 1cm = 28.35pt
+
+                    //row.HeightRule = Microsoft.Office.Interop.Word.WdRowHeightRule.wdRowHeightExactly;
+                    row.HeightRule = Microsoft.Office.Interop.Word.WdRowHeightRule.wdRowHeightAuto;
+
+                }
+                //else
+                //{
+                //    Table table = aDoc.Tables[tableFormat.TableNum];
+                //    Row row = table.Rows[tableFormat.RowNum];
+                //    //Row row = table.Rows.Add(table.Rows[tableFormat.RowNum]);
+
+                //    // 設定行高
+                //    row.Height = Convert.ToSingle(tableFormat.RowHeight * 28.35); // 高度以毫米為單位, 1cm = 28.35pt
+
+                //    //row.HeightRule = Microsoft.Office.Interop.Word.WdRowHeightRule.wdRowHeightExactly;
+                //    row.HeightRule = Microsoft.Office.Interop.Word.WdRowHeightRule.wdRowHeightAuto;
+                //}
+
+            }
+            foreach (var tableFormat in formatDt.OrderByDescending(c => c.RowNum))
+            {
+                int i = 0;
+                foreach (var cellFormat in tableFormat.Cells.OrderByDescending(c => c.CellNum))
+                {
+                    i++;
+                    if (tableFormat.RowNum == 0 && cellFormat.CellNum == 0)
+                    {
+                        continue;
+                    }
+                    Cell cell;
+
+                    if (i >= 1)
+                    {
+                        cell = aDoc.Content.Tables[tableFormat.TableNum].Cell(tableFormat.RowNum, cellFormat.CellNum);
+                    }
+                    else
+                    {
+                        cell = aDoc.Content.Tables[tableFormat.TableNum].Cell(tableFormat.RowNum, cellFormat.CellNum);
+                    }
+
+
+                    if (cellFormat.SplitType == "Vertical")
+                    {
+                        cell.Range.Select();
+                        cell.Split(1, 2); // 分成2列
+                        // 設置新單元格內部邊框樣式
+                        Cell newCell1 = aDoc.Content.Tables[tableFormat.TableNum].Cell(tableFormat.RowNum, cellFormat.CellNum);
+                        Cell newCell2 = aDoc.Content.Tables[tableFormat.TableNum].Cell(tableFormat.RowNum, cellFormat.CellNum + 1);
+                        if (cellFormat.SplitShareLine)
+                        {
+                            SetSharedOuterBorders(newCell1, newCell2, isVertical: true);
+                        }
+                    }
+                    else if (cellFormat.SplitType == "Horizontal")
+                    {
+                        cell.Range.Select();
+                        cell.Split(2, 1); // 分成2行
+                        // 設置新單元格內部邊框樣式
+                        Cell newCell1 = aDoc.Content.Tables[tableFormat.TableNum].Cell(tableFormat.RowNum, cellFormat.CellNum);
+                        Cell newCell2 = aDoc.Content.Tables[tableFormat.TableNum].Cell(tableFormat.RowNum + 1, cellFormat.CellNum);
+                        if (cellFormat.SplitShareLine)
+                        {
+                            SetSharedOuterBorders(newCell1, newCell2, isVertical: false);
+                        }
+
+                    }
+                }
+            }
+        }
+        public void SetSharedOuterBorders(Cell cell1, Cell cell2, bool isVertical)
+        {
+            if (isVertical)
+            {
+                cell1.Borders[WdBorderType.wdBorderRight].LineStyle = WdLineStyle.wdLineStyleNone;
+                cell2.Borders[WdBorderType.wdBorderLeft].LineStyle = WdLineStyle.wdLineStyleNone;
+            }
+            else
+            {
+                cell1.Borders[WdBorderType.wdBorderBottom].LineStyle = WdLineStyle.wdLineStyleNone;
+                cell2.Borders[WdBorderType.wdBorderTop].LineStyle = WdLineStyle.wdLineStyleNone;
+            }
+        }
+
+        public void FillTableData(System.Data.DataTable dataDt)
+        {
+            if (dataDt == null || dataDt.Rows.Count == 0)
+                return;
+
+
+            foreach (DataRow row in dataDt.Rows)
+            {
+                int tableIndex = Convert.ToInt32(row["TableNum"]);
+                int rowIndex = Convert.ToInt32(row["RowNum"]);
+                int cellIndex = Convert.ToInt32(row["CellNum"]);
+                string cellData = row["CellData"].ToString();
+
+                Table table = aDoc.Tables[tableIndex];
+                table.Cell(rowIndex, cellIndex).Range.Text = cellData;
+            }
+        }
+
+
+        public void MergeTableCells(List<TableFormat> formatDt)
+        {
+            if (formatDt == null || formatDt.Count == 0)
+                return;
+
+            foreach (var tableFormat in formatDt.OrderByDescending(c => c.RowNum))
+            {
+                Table table = aDoc.Tables[tableFormat.TableNum];
+                foreach (var cellFormat in tableFormat.Cells.OrderByDescending(c => c.CellNum))
+                {
+                    // Skip if MergeDirection is empty or MergeCount is 0
+                    if (string.IsNullOrEmpty(cellFormat.MergeDirection) || cellFormat.MergeCount <= 1)
+                        continue;
+
+                    try
+                    {
+                        if (cellFormat.MergeDirection == "Horizontal")
+                        {
+                            // Ensure the end cell exists before attempting to merge
+                            int endCellIndex = cellFormat.CellNum + cellFormat.MergeCount - 1;
+                            if (endCellIndex <= table.Columns.Count)
+                            {
+                                Cell startCell = table.Cell(tableFormat.RowNum, cellFormat.CellNum);
+                                Cell endCell = table.Cell(tableFormat.RowNum, endCellIndex);
+                                startCell.Merge(endCell);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Cannot merge horizontally: End cell index " + endCellIndex + " exceeds column count " + table.Columns.Count);
+                            }
+                        }
+                        else if (cellFormat.MergeDirection == "Vertical")
+                        {
+                            // Ensure the end cell exists before attempting to merge
+                            int endRowIndex = tableFormat.RowNum + cellFormat.MergeCount - 1;
+                            if (endRowIndex <= table.Rows.Count)
+                            {
+                                Cell startCell = table.Cell(tableFormat.RowNum, cellFormat.CellNum);
+                                Cell endCell = table.Cell(endRowIndex, cellFormat.CellNum);
+                                startCell.Merge(endCell);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Cannot merge vertically: End row index " + endRowIndex + " exceeds row count " + table.Rows.Count);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error merging cells : " + ex.Message);
+                    }
+                }
+            }
+        }
+        #endregion
 
         /// <summary>
         /// 保存為PDF
@@ -163,15 +364,15 @@ namespace PrintKernel
             //try
             //{
             //LIS網站Word範本 => 建立暫存檔
-           
+            
             CreateTempFile(pTemplateFileName, pTempFileName, folderPath);
 
             //是否顯示處理過程
-            wordApp4 = new Application { Visible = IsVisible };
+            wordApp10 = new Application { Visible = IsVisible };
 
             //開啟檔案
             string OutputFile = string.Format("{0}\\{1}", folderPath, pTempFileName);
-            aDoc = wordApp4.Documents.Open(OutputFile, ReadOnly: false, Visible: IsVisible);
+            aDoc = wordApp10.Documents.Open(OutputFile, ReadOnly: false, Visible: IsVisible);
 
             //啟用
             aDoc.Activate();
@@ -209,7 +410,7 @@ namespace PrintKernel
         {
             try
             {
-                wordApp4.Selection.HomeKey(unit, missing);
+                wordApp10.Selection.HomeKey(unit, missing);
             }
             catch (Exception)
             {
@@ -256,7 +457,6 @@ namespace PrintKernel
         {
             //try
             //{
-
             for (int i = 0; i <= pDr.Table.Columns.Count - 1; i++)
             {
                 String findText = pDr.Table.Columns[i].ColumnName.ToString();
@@ -307,11 +507,11 @@ namespace PrintKernel
                     object wrap = WdFindWrap.wdFindContinue;
 
                     //替換全域性Document
-                    wordApp4.Selection.Find.ClearFormatting();
-                    wordApp4.Selection.Find.Replacement.ClearFormatting();
-                    wordApp4.Selection.Find.Text = findText.ToString();
+                    wordApp10.Selection.Find.ClearFormatting();
+                    wordApp10.Selection.Find.Replacement.ClearFormatting();
+                    wordApp10.Selection.Find.Text = findText.ToString();
                     replaceText = replacetxt_ary[0];
-                    wordApp4.Selection.Find.Replacement.Text = replaceText.ToString();
+                    wordApp10.Selection.Find.Replacement.Text = replaceText.ToString();
 
                     //依據傳入參數是否帶格式|||Color 來判斷是否需修改字體顏色
                     //例如: 疑似三倍體|||Color|||RED，代表疑似三倍體文字要用紅色顯示
@@ -322,21 +522,21 @@ namespace PrintKernel
                             switch (replacetxt_ary[2])
                             {
                                 case "RED":
-                                    wordApp4.Selection.Find.Replacement.Font.ColorIndex = WdColorIndex.wdRed;
+                                    wordApp10.Selection.Find.Replacement.Font.ColorIndex = WdColorIndex.wdRed;
                                     break;
 
                                 case "BLUE":
-                                    wordApp4.Selection.Find.Replacement.Font.ColorIndex = WdColorIndex.wdBlue;
+                                    wordApp10.Selection.Find.Replacement.Font.ColorIndex = WdColorIndex.wdBlue;
                                     break;
 
                                 case "LIGHTBLUE":
-                                    wordApp4.Selection.Find.Replacement.Font.Color = (WdColor)((192 << 16) + (112 << 8) + 0); // 使用 RGB 值 (R=0, G=112, B=192)
+                                    wordApp10.Selection.Find.Replacement.Font.Color = (WdColor)((192 << 16) + (112 << 8) + 0); // 使用 RGB 值 (R=0, G=112, B=192)
                                     break;
                             }
                         }
                     }
 
-                    wordApp4.Selection.Find.Execute(ref findText, ref matchCase, ref matchWholeWord,
+                    wordApp10.Selection.Find.Execute(ref findText, ref matchCase, ref matchWholeWord,
                             ref matchWildCards, ref matchSoundsLike, ref matchAllWordForms, ref forward, ref wrap, ref format, ref replaceText, ref replace,
                             ref matchKashida, ref matchDiacritics, ref matchAlefHamza, ref matchControl);
                 }
@@ -360,7 +560,7 @@ namespace PrintKernel
                 {
                     replaceText = replacetxt_ary[0];
                     object m = System.Type.Missing;
-                    wordApp4.ActiveDocument.Sections[1].Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.Find.Execute(
+                    wordApp10.ActiveDocument.Sections[1].Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.Find.Execute(
                        ref findText,
                        ref m, ref m, ref m, ref m, ref m, ref m, ref m, ref m,
                        ref replaceText,
@@ -411,81 +611,81 @@ namespace PrintKernel
         {
             //try
             //{
-                // 取得當前文檔的所有節
-                foreach (Microsoft.Office.Interop.Word.Section section in this.wordApp4.ActiveDocument.Sections)
+            // 取得當前文檔的所有節
+            foreach (Microsoft.Office.Interop.Word.Section section in this.wordApp10.ActiveDocument.Sections)
+            {
+                // 取得節的主要頁首範圍
+                Range headerRange = section.Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range;
+
+                // 清除查找格式化
+                headerRange.Find.ClearFormatting();
+
+                // 設置查找條件並執行查找（替換Header中的特定字元）
+                while (headerRange.Find.Execute(FindStr))
                 {
-                    // 取得節的主要頁首範圍
-                    Range headerRange = section.Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range;
+                    // 保存找到的文字範圍
+                    Range foundRange = headerRange.Duplicate;
 
-                    // 清除查找格式化
-                    headerRange.Find.ClearFormatting();
+                    // 插入圖片在文字範圍的後面
+                    Range insertRange = foundRange.Duplicate;
+                    insertRange.Collapse(WdCollapseDirection.wdCollapseEnd);
+                    InlineShape inlineShape = insertRange.InlineShapes.AddPicture(
+                        FileName: replacePic.ToString(),
+                        LinkToFile: false,
+                        SaveWithDocument: true
+                    );
 
-                    // 設置查找條件並執行查找（替換Header中的特定字元）
-                    while (headerRange.Find.Execute(FindStr))
+                    // 設定圖片寬高
+                    inlineShape.Width = Convert.ToInt16(W);
+                    inlineShape.Height = Convert.ToInt16(H);
+
+                    // 僅清除文字內容，保留圖片
+                    foundRange.Text = "";
+                }
+
+                // 遍歷Header中的所有Shape
+                foreach (Shape shape in section.Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.ShapeRange)
+                {
+                    // 確認這個Shape是文字方塊
+                    if (shape.Type == Microsoft.Office.Core.MsoShapeType.msoTextBox)
                     {
-                        // 保存找到的文字範圍
-                        Range foundRange = headerRange.Duplicate;
+                        // 取得文字方塊中的文字範圍
+                        Range textBoxRange = shape.TextFrame.TextRange;
 
-                        // 插入圖片在文字範圍的後面
-                        Range insertRange = foundRange.Duplicate;
-                        insertRange.Collapse(WdCollapseDirection.wdCollapseEnd);
-                        InlineShape inlineShape = insertRange.InlineShapes.AddPicture(
-                            FileName: replacePic.ToString(),
-                            LinkToFile: false,
-                            SaveWithDocument: true
-                        );
+                        // 清除查找格式化
+                        textBoxRange.Find.ClearFormatting();
 
-                        // 設定圖片寬高
-                        inlineShape.Width = Convert.ToInt16(W);
-                        inlineShape.Height = Convert.ToInt16(H);
-
-                        // 僅清除文字內容，保留圖片
-                        foundRange.Text = "";
-                    }
-
-                    // 遍歷Header中的所有Shape
-                    foreach (Shape shape in section.Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.ShapeRange)
-                    {
-                        // 確認這個Shape是文字方塊
-                        if (shape.Type == Microsoft.Office.Core.MsoShapeType.msoTextBox)
+                        // 設置查找條件並執行查找
+                        while (textBoxRange.Find.Execute(FindStr))
                         {
-                            // 取得文字方塊中的文字範圍
-                            Range textBoxRange = shape.TextFrame.TextRange;
+                            // 保存找到的文字範圍
+                            Range foundTextBoxRange = textBoxRange.Duplicate;
 
-                            // 清除查找格式化
-                            textBoxRange.Find.ClearFormatting();
+                            // 插入圖片在文字範圍的後面
+                            Range insertTextBoxRange = foundTextBoxRange.Duplicate;
+                            insertTextBoxRange.Collapse(WdCollapseDirection.wdCollapseEnd);
+                            InlineShape inlineShapeInTextBox = insertTextBoxRange.InlineShapes.AddPicture(
+                                FileName: replacePic.ToString(),
+                                LinkToFile: false,
+                                SaveWithDocument: true
+                            );
 
-                            // 設置查找條件並執行查找
-                            while (textBoxRange.Find.Execute(FindStr))
-                            {
-                                // 保存找到的文字範圍
-                                Range foundTextBoxRange = textBoxRange.Duplicate;
+                            // 設定圖片寬高
+                            inlineShapeInTextBox.Width = Convert.ToInt16(W);
+                            inlineShapeInTextBox.Height = Convert.ToInt16(H);
 
-                                // 插入圖片在文字範圍的後面
-                                Range insertTextBoxRange = foundTextBoxRange.Duplicate;
-                                insertTextBoxRange.Collapse(WdCollapseDirection.wdCollapseEnd);
-                                InlineShape inlineShapeInTextBox = insertTextBoxRange.InlineShapes.AddPicture(
-                                    FileName: replacePic.ToString(),
-                                    LinkToFile: false,
-                                    SaveWithDocument: true
-                                );
-
-                                // 設定圖片寬高
-                                inlineShapeInTextBox.Width = Convert.ToInt16(W);
-                                inlineShapeInTextBox.Height = Convert.ToInt16(H);
-
-                                // 僅清除文字內容，保留圖片
-                                foundTextBoxRange.Text = "";
-                            }
+                            // 僅清除文字內容，保留圖片
+                            foundTextBoxRange.Text = "";
                         }
                     }
                 }
+            }
 
-                // 確保在頁首或頁尾模式時返回到主文件
-                if (wordApp4.ActiveWindow.View.Type == WdViewType.wdPrintView)
-                {
-                    wordApp4.ActiveWindow.ActivePane.View.SeekView = WdSeekView.wdSeekMainDocument;
-                }
+            // 確保在頁首或頁尾模式時返回到主文件
+            if (wordApp10.ActiveWindow.View.Type == WdViewType.wdPrintView)
+            {
+                wordApp10.ActiveWindow.ActivePane.View.SeekView = WdSeekView.wdSeekMainDocument;
+            }
             //}
             //catch (Exception ex)
             //{
@@ -505,14 +705,14 @@ namespace PrintKernel
                 object m = System.Type.Missing;
 
                 // 替換頁首範圍中的特定字元
-                wordApp4.ActiveDocument.Sections[1].Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.Find.Execute(
+                wordApp10.ActiveDocument.Sections[1].Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.Find.Execute(
                    ref findText,
                    ref m, ref m, ref m, ref m, ref m, ref m, ref m, ref m,
                    ref replaceText,
                    ref m, ref m, ref m, ref m, ref m);
 
                 // 遍歷Header中的所有Shape (文字方塊)
-                foreach (Shape shape in wordApp4.ActiveDocument.Sections[1].Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.ShapeRange)
+                foreach (Shape shape in wordApp10.ActiveDocument.Sections[1].Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range.ShapeRange)
                 {
                     // 判斷是否為文字方塊
                     if (shape.Type == Microsoft.Office.Core.MsoShapeType.msoTextBox)
@@ -550,7 +750,7 @@ namespace PrintKernel
         public void AddImage(System.Data.DataRow pDr)
         {
             //try
-            //{               
+            //{
             for (int i = 0; i <= pDr.Table.Columns.Count - 1; i++)
             {
                 String findText = pDr.Table.Columns[i].ColumnName.ToString().Trim();
@@ -569,7 +769,7 @@ namespace PrintKernel
                         {
                             float Width = Convert.ToInt16(replacetxt_ary[2]);
                             float Height = Convert.ToInt16(replacetxt_ary[3]);
-                            var sel = wordApp4.Selection;
+                            var sel = wordApp10.Selection;
 
                             SearchReplacePic("@" + findText + "@", image_path, Width, Height);
                         }
@@ -584,7 +784,7 @@ namespace PrintKernel
                         {
                             float Width = Convert.ToInt16(replacetxt_ary[2]);
                             float Height = Convert.ToInt16(replacetxt_ary[3]);
-                            var sel = wordApp4.Selection;
+                            var sel = wordApp10.Selection;
 
                             SearchReplacePic("@" + findText + "@", image_path, Width, Height);
                         }
@@ -606,7 +806,7 @@ namespace PrintKernel
                             // 獲取圖片的寬度和高度
                             float width = img.Width;
                             float height = img.Height;
-                            var sel = wordApp4.Selection;
+                            var sel = wordApp10.Selection;
 
                             SearchReplacePic("@" + findText + "@", Path, width, height);
                             //SearchReplaceTextFramePic("@" + findText + "@", Path);
@@ -638,7 +838,7 @@ namespace PrintKernel
                             // 獲取圖片的寬度和高度
                             float width = img.Width;
                             float height = img.Height;
-                            var sel = wordApp4.Selection;
+                            var sel = wordApp10.Selection;
 
                             SearchReplacePic("@" + findText + "@", Path, width, height);
                             //SearchReplaceTextFramePic("@" + findText + "@", Path);
@@ -670,7 +870,7 @@ namespace PrintKernel
                             // 獲取圖片的寬度和高度
                             float width = img.Width;
                             float height = img.Height;
-                            var sel = wordApp4.Selection;
+                            var sel = wordApp10.Selection;
 
                             SearchReplacePicInHeader("@" + findText + "@", Path, width, height);
                             //SearchReplaceTextFramePic("@" + findText + "@", Path);
@@ -728,7 +928,7 @@ namespace PrintKernel
                                 }
                             }
 
-                            var sel = wordApp4.Selection;
+                            var sel = wordApp10.Selection;
 
                             //SearchReplacePicInHeaderAndTextBox("@" + findText + "@", Path, 60, 60);
                             SearchReplacePicInHeaderAndTextBox("@" + findText + "@", Path, width, height);
@@ -767,7 +967,7 @@ namespace PrintKernel
             try
             {
                 // 取得當前文檔的所有節
-                foreach (Section section in this.wordApp4.ActiveDocument.Sections)
+                foreach (Section section in this.wordApp10.ActiveDocument.Sections)
                 {
                     // 取得節的主要頁首範圍
                     Range headerRange = section.Headers[WdHeaderFooterIndex.wdHeaderFooterPrimary].Range;
@@ -782,7 +982,7 @@ namespace PrintKernel
                     {
                         headerRange.Select();
 
-                        InlineShape inlineShape = this.wordApp4.Selection.InlineShapes.AddPicture(
+                        InlineShape inlineShape = this.wordApp10.Selection.InlineShapes.AddPicture(
                             FileName: replacePic.ToString(),
                             LinkToFile: false,
                             SaveWithDocument: true
@@ -811,16 +1011,16 @@ namespace PrintKernel
             try
             {
                 GotoTheBegining();
-                this.wordApp4.Selection.Find.ClearFormatting();
-                if ((this.wordApp4.Selection.Find.Execute(FindStr) == true))
+                this.wordApp10.Selection.Find.ClearFormatting();
+                if ((this.wordApp10.Selection.Find.Execute(FindStr) == true))
                 {
-                    this.wordApp4.Selection.Select();
+                    this.wordApp10.Selection.Select();
 
 
                     object linkToFile = true;
                     object saveWithDocument = true;
 
-                    InlineShape Inlineshape = this.wordApp4.Selection.InlineShapes.AddPicture(
+                    InlineShape Inlineshape = this.wordApp10.Selection.InlineShapes.AddPicture(
                                              FileName: replacePic.ToString(),
                                              LinkToFile: false,
                                              SaveWithDocument: true
@@ -899,20 +1099,20 @@ namespace PrintKernel
                 aDoc.Close();
                 Marshal.FinalReleaseComObject(aDoc);
             }
-            if (wordApp4 != null)
+            if (wordApp10 != null)
             {
                 //try
                 //{
                 object dontSave = WdSaveOptions.wdDoNotSaveChanges;
-                ((_Application)wordApp4).Quit(ref dontSave);
+                ((_Application)wordApp10).Quit(ref dontSave);
                 //}
                 //finally
                 //{
-                Marshal.FinalReleaseComObject(wordApp4);
+                Marshal.FinalReleaseComObject(wordApp10);
                 //}
             }
             aDoc = null;
-            wordApp4 = null;
+            wordApp10 = null;
             //GC.Collect();
             //}
             //catch (Exception ex)
@@ -927,11 +1127,11 @@ namespace PrintKernel
             try
             {
                 object dontSave = WdSaveOptions.wdDoNotSaveChanges;
-                ((_Application)wordApp4).Quit(ref dontSave);
+                ((_Application)wordApp10).Quit(ref dontSave);
             }
             finally
             {
-                Marshal.FinalReleaseComObject(wordApp4);
+                Marshal.FinalReleaseComObject(wordApp10);
             }
         }
 

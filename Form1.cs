@@ -29,6 +29,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using System.Diagnostics;
 using System.Configuration;
 using System.Collections;
+using WindowsFormsApp1.Class;
 
 namespace WindowsFormsApp1
 {
@@ -50,6 +51,7 @@ namespace WindowsFormsApp1
         private WordBase7 word7 = new WordBase7();
         private WordBase8 word8 = new WordBase8();
         private WordBase9 word9 = new WordBase9();
+        private WordBase10 word10 = new WordBase10();
 
         private static System.Timers.Timer myTimer1;
         private static System.Timers.Timer myTimer2;
@@ -60,16 +62,17 @@ namespace WindowsFormsApp1
         private static System.Timers.Timer myTimer7;
         private static System.Timers.Timer myTimer8;
         private static System.Timers.Timer myTimer9;
+        private static System.Timers.Timer myTimer10;
         private string watermarkText = "正式區";
-        Task[] tasks = new Task[9];
-        private CancellationTokenSource[] cancellationTokens = new CancellationTokenSource[9];
+        Task[] tasks = new Task[10];
+        private CancellationTokenSource[] cancellationTokens = new CancellationTokenSource[10];
         private bool isTask1Running = false; // Flag to track task status
         private System.Timers.Timer clearTimer;
-        private CancellationTokenSource[] stopCheckCancellations = new CancellationTokenSource[9]; // 管理每個計時器的取消源
-        private bool[] isTimerRunning = new bool[9]; // 用來記錄每個計時器的運行狀態
+        private CancellationTokenSource[] stopCheckCancellations = new CancellationTokenSource[10]; // 管理每個計時器的取消源
+        private bool[] isTimerRunning = new bool[10]; // 用來記錄每個計時器的運行狀態
         private System.Timers.Timer deleteDocTimer;
-        private Panel[] timerStatusLights = new Panel[9];  // 用來顯示每個 Timer 狀態的燈
-        private Label[] timerLabel = new Label[9];
+        private Panel[] timerStatusLights = new Panel[10];  // 用來顯示每個 Timer 狀態的燈
+        private Label[] timerLabel = new Label[10];
 
         public Form1()
         {
@@ -121,7 +124,7 @@ namespace WindowsFormsApp1
             //this.Controls.Add(TESTButton);
 
             // 初始化Panel+Label
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 10; i++)
             {
                 timerStatusLights[i] = new Panel
                 {
@@ -189,7 +192,7 @@ namespace WindowsFormsApp1
 
             // 檢查所有 9 個計時器是否已經在運行
             bool areAllTimersRunning = true;
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 10; i++)
             {
                 if (!isTimerRunning[i])
                 {
@@ -210,7 +213,7 @@ namespace WindowsFormsApp1
             }
 
             // 停止所有當前的任務並重新啟動那些未運行的計時器
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 10; i++)
             {
                 if (!isTimerRunning[i])  // 只有未運行的計時器才需要重啟
                 {
@@ -253,6 +256,9 @@ namespace WindowsFormsApp1
                             break;
                         case 8:
                             tasks[8] = System.Threading.Tasks.Task.Run(() => Timer9_work(cancellationTokens[8].Token));
+                            break;
+                        case 9:
+                            tasks[9] = System.Threading.Tasks.Task.Run(() => Timer10_work(cancellationTokens[9].Token));
                             break;
                         default:
                             break;
@@ -707,6 +713,54 @@ namespace WindowsFormsApp1
             stopCheckCancellations[8] = new CancellationTokenSource();
             await CheckIfTimerRestarts(8, stopCheckCancellations[8].Token, "SMA 5-9");
         }
+
+        private async void Timer10_work(CancellationToken token)
+        {
+            // 開始時將計時器設置為運行狀態
+            isTimerRunning[9] = true;
+
+            // 燈設置為綠色，表示計時器正在運行
+            this.Invoke((MethodInvoker)delegate
+            {
+                timerStatusLights[9].BackColor = Color.Lime;
+                timerLabel[9].Text = "ECS";
+            });
+
+            myTimer10 = new System.Timers.Timer();
+            //Elapsed代表,time設定的時間到之後要執行的方法           
+            myTimer10.Elapsed += new ElapsedEventHandler(reportTime10);
+            myTimer10.Interval = 1 * 1400;
+            myTimer10.Start();
+
+            try
+            {
+                // Wait for the task to be canceled
+                await System.Threading.Tasks.Task.Delay(Timeout.Infinite, token);
+            }
+            catch (TaskCanceledException)
+            {
+                // Handle cancellation
+            }
+
+            // Stop the timer when cancellation is requested
+            myTimer10.Stop();
+            myTimer10.Dispose();
+
+            // 將計時器狀態設置為停止
+            isTimerRunning[9] = false;
+
+            // 燈設置為紅色，表示計時器停止
+            this.Invoke((MethodInvoker)delegate
+            {
+                timerStatusLights[9].BackColor = Color.Red;
+                timerLabel[9].Text = "ECS";
+            });
+
+            // 開始檢查10秒內是否重新啟動
+            stopCheckCancellations[9] = new CancellationTokenSource();
+            await CheckIfTimerRestarts(9, stopCheckCancellations[9].Token, "ECS");
+        }
+
 
         /// <summary>
         /// LIS
@@ -2272,6 +2326,210 @@ namespace WindowsFormsApp1
 
             }
         }
+
+        /// <summary>
+        /// SMA 5-9
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void reportTime10(object sender, ElapsedEventArgs e)
+        {
+            string logMessage = "ECS: " + DateTime.Now.ToString();
+            this.Invoke(new Action(() =>
+            {
+                listBox1.Items.Add(logMessage);
+                listBox1.TopIndex = listBox1.Items.Count - 1;
+            }));
+            TimerParameters parameters4 = new TimerParameters();
+            parameters4 = GetTimerParametersFromDatabase(10);
+
+            string P_Text = "";
+            //listBox.Items.Add("timer5_start:" + DateTime.Now.ToString());
+            if (parameters4.Product.IndexOf(',') > -1)
+            {
+                string[] P_list = parameters4.Product.Split(',');
+                foreach (var P_item in P_list)
+                {
+                    if (P_Text == "")
+                    {
+                        if (parameters4.P_Type == "1")
+                        {
+                            P_Text = " FilePath NOT like '%" + P_item + "%' ";
+                        }
+                        else
+                        {
+                            P_Text = " FilePath like '%" + P_item + "%' ";
+                        }
+                    }
+                    else
+                    {
+                        if (parameters4.P_Type == "1")
+                        {
+                            P_Text = P_Text + " AND  FilePath NOT like '%" + P_item + "%' ";
+                        }
+                        else
+                        {
+                            P_Text = P_Text + " OR FilePath like '%" + P_item + "%' ";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (parameters4.P_Type == "1")
+                {
+                    P_Text = " FilePath NOT like '%" + parameters4.Product + "%' ";
+                }
+                else
+                {
+                    P_Text = " FilePath like '%" + parameters4.Product + "%' ";
+                }
+            }
+            string Num_Text = "";
+            if (parameters4.PrintNum.IndexOf(',') > -1)
+            {
+                string[] Num_list = parameters4.PrintNum.Split(',');
+                foreach (var Num_item in Num_list)
+                {
+                    if (Num_Text == "")
+                    {
+                        Num_Text = " FilePath LIKE '%" + Num_item + ".doc' OR FilePath LIKE '%" + Num_item + ".pdf' ";
+                    }
+                    else
+                    {
+                        Num_Text = Num_Text + " OR FilePath LIKE '%" + Num_item + ".doc' OR FilePath LIKE '%" + Num_item + ".pdf' ";
+                    }
+                }
+            }
+
+            //檢查Queue Table是否有待套印筆數           
+            //Console.WriteLine(string.Format("{0} cycle checking.", DateTime.Now));
+            string sql = "select TOP (1) * from LIS_QUEUE_MASTER_" + parameters4.C_System + " nolock ";
+            //sql += " where QueueID = '202403181057576949' ";
+            sql += " where Flag = 'N' ";
+            sql += " and TemplateFileName not like '%.rpt%' ";
+            sql += " And (" + P_Text + ") ";
+            if (Num_Text != "")
+            {
+                sql += " AND ( " + Num_Text + " ) ";
+            }
+            sql += " order by CreateDateTime ";
+
+            System.Data.DataTable dt_master = DBA.GetDataTable(sql);
+            if (this.DBA.LastError != "")
+            {
+                string ErrMessage = "ECS: " + this.DBA.LastError;
+                this.Invoke(new Action(() =>
+                {
+                    listBoxErr.Items.Add(ErrMessage);
+                }));
+            }
+
+            if (dt_master != null && dt_master.Rows.Count > 0)
+            {
+
+                //待套印筆數
+                foreach (DataRow dr_m in dt_master.Rows)
+                {
+                    String QueueID = dr_m["QueueID"].ToString().Trim();
+                    String TargetFilePath = dr_m["FilePath"].ToString().Trim();
+                    try
+                    {
+                        SetStatus("Start", QueueID, parameters4.C_System, "word10");
+                        DateTime startTime = DateTime.Now;    //轉換起始時間
+                        List<string> sPDFFileNameList = new List<string>();
+                        //listBox.Items.Add(string.Format("{0} 開始轉換", startTime));
+                        //Word範本路徑
+                        string TemplateFilePath = dr_m["TemplateFileName"].ToString().Trim();
+
+                        //檔案路徑
+                        string TargetFileName = dr_m["FilePath"].ToString().Trim();
+
+                        #region"20240919表格修改" 
+                        string FormatDT = dr_m["TableFormat"].ToString().Trim();
+                        string DataDT = dr_m["TableData"].ToString().Trim();
+                        #endregion
+
+                        //JSON資料還原成DataTable
+                        System.Data.DataTable Dt = JsonConvert.DeserializeObject<System.Data.DataTable>(dr_m["ReportData"].ToString().Trim());
+
+                        #region"20240919表格修改"
+                        List<TableFormat> formatDt = new List<TableFormat>();
+                        if (!string.IsNullOrEmpty(FormatDT))
+                        {
+                            formatDt = JsonConvert.DeserializeObject<List<TableFormat>>(FormatDT);
+                        }
+                        else
+                        {
+                            formatDt = null;
+                        }
+
+
+                        //DataTable dataDt = JsonConvert.DeserializeObject<DataTable>(dr_m["DataDT"].ToString().Trim());
+                        System.Data.DataTable dataDt = new System.Data.DataTable();
+                        if (!string.IsNullOrEmpty(DataDT))
+                        {
+                            dataDt = JsonConvert.DeserializeObject<System.Data.DataTable>(DataDT);
+                        }
+                        else
+                        {
+                            dataDt = null;
+                        }
+                        #endregion
+                        //檔案格式(PDF 或 WORD)
+                        string FileType = dr_m["FileType"].ToString().Trim();
+
+                        //是否為暫存檔案
+                        string IsTempFile = dr_m["IsTempFile"].ToString().Trim();
+                        // 暫停計時器
+                        myTimer10.Stop();
+                        //開始匯出
+                        this.Invoke(new Action(() =>
+                        {
+                            listBox1.Items.Add("從範本複製一份到新檔案(ECS)");
+                        }));
+                        //this.word10.Export(TemplateFilePath, TargetFileName, Dt, FileType, IsTempFile);
+                        this.word10.Export(TemplateFilePath, TargetFileName, Dt, formatDt, dataDt, FileType, IsTempFile);
+
+                        if (String.IsNullOrEmpty(this.word10.LastError))
+                        {
+                            SetStatus("Finish", QueueID, parameters4.C_System, "word10");
+                        }
+                        else
+                        {
+                            SetStatus("Error", QueueID, parameters4.C_System, "word10");
+                        }
+
+                        this.Invoke(new Action(() =>
+                        {
+                            listBox1.Items.Add("檔案轉換成功(ECS)");
+                        }));
+                        DateTime endtime = DateTime.Now;    //轉換結束時間
+                        TimeSpan duration = new TimeSpan(endtime.Ticks - startTime.Ticks);  //計算一筆花多少時間
+
+                        //listBox.Items.Add(string.Format("{0} 檔名:{1} 花費{2}秒 ", endtime, TargetFilePath, duration.Seconds));
+                        //listBox.Items.Add("-------------------------------------------------");
+                    }
+                    catch (Exception ex)
+                    {
+                        string ERRMessage = $"例外訊息: {ex.Message}\n堆疊追蹤: {ex.StackTrace}";
+                        SetStatus("Error", QueueID, parameters4.C_System, "word10");
+                        InsertLog(QueueID, ERRMessage);
+                        EmailSender.SendEmailAsync(ConfigurationManager.AppSettings["MailTo"], "", "", $"列印核心異常({QueueID}) {TargetFilePath}", ERRMessage);
+                        DeleteFailReport(TargetFilePath, ConfigurationManager.AppSettings["LISFilePath"]);
+                    }
+                    finally
+                    {
+                        word10.Init();
+                        //釋放資源 
+                        word10.Close();
+                    }
+                    myTimer10.Start();
+                }
+
+
+            }
+        }
         public void DeleteFailReport(string FilePath,string FROM)
         {
             //ConfigurationManager.AppSettings["LISFilePath"];
@@ -2354,7 +2612,8 @@ namespace WindowsFormsApp1
                             { "word6", this.word6.LastError },
                             { "word7", this.word7.LastError },
                             { "word8", this.word8.LastError },
-                            { "word9", this.word9.LastError }
+                            { "word9", this.word9.LastError },
+                            { "word10", this.word10.LastError }
                          };
 
                     if (wordErrors.TryGetValue(wordapp, out var error))
