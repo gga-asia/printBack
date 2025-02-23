@@ -12,7 +12,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using WindowsFormsApp1.Class;
+using Application = Microsoft.Office.Interop.Word.Application;
 
 
 namespace PrintKernel
@@ -84,6 +86,8 @@ namespace PrintKernel
                     //替換文字
                     Console.WriteLine(string.Format("{0} 替換文字", DateTime.Now));
                     ReplaceWordTxtFromDatatable(dr);
+
+                    ConvertToSuperscript2();
 
                     string OutputPath = ConfigurationManager.AppSettings["LISFilePath"];
 
@@ -302,6 +306,55 @@ namespace PrintKernel
             }
         }
         #endregion
+
+
+        public void ConvertToSuperscript2()
+        {
+            try
+            {
+                GotoTheBegining(); // 確保從文件開頭開始搜尋
+                this.wordApp10.Selection.Find.ClearFormatting();
+
+                // 設定搜尋條件
+                this.wordApp10.Selection.Find.Text = "#@*@#"; // 使用萬用字元找到 #@...@#
+                this.wordApp10.Selection.Find.MatchWildcards = true; // 啟用萬用字元
+
+                // 反覆搜尋，直到找不到符合條件的內容
+                while (this.wordApp10.Selection.Find.Execute())
+                {
+                    this.wordApp10.Selection.Select(); // 選取找到的文字
+
+                    string selectedText = this.wordApp10.Selection.Text;
+
+                    // 確保格式符合 "#@...@#"
+                    if (selectedText.StartsWith("#@") && selectedText.EndsWith("@#"))
+                    {
+                        // 取得實際內容（去掉 "#@" 和 "@#"）
+                        string processedText = selectedText.Substring(2, selectedText.Length - 4);
+
+                        // 直接修改選取範圍的文字內容
+                        this.wordApp10.Selection.Text = processedText;
+
+                        // 重新選取剛剛替換的文字
+                        this.wordApp10.Selection.MoveLeft(WdUnits.wdCharacter, processedText.Length, WdMovementType.wdExtend);
+
+                        // 設定上標
+                        this.wordApp10.Selection.Font.Superscript = 1;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("發生錯誤：" + ex.Message);
+            }
+            finally
+            {
+                GotoTheBegining(); // 完成後將游標移回文件開頭
+                this.wordApp10.Selection.Find.ClearFormatting();
+                this.wordApp10.Selection.Find.MatchWildcards = false; // 關閉萬用字元模式
+            }
+        }
+
 
         /// <summary>
         /// 保存為PDF
